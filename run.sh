@@ -4,6 +4,33 @@
 nome_do_arquivo="debian_packages.txt"
 contador=0
 
+DIRTEMP="dirTemp"
+
+downloadPackage() {
+  # O nome do pacote é o primeiro argumento do script
+  packageName="$1"
+
+  # Verifica se o nome do pacote foi fornecido
+  if [ -z "$packageName" ]; then
+    echo "Erro: Nome do pacote não fornecido."
+    exit 1
+  fi
+
+  # Pega a url do pacote
+  url=$(apt-cache show $packageName | awk '/^Filename:/ {print "http://ubuntu.c3sl.ufpr.br/ubuntu/"$2; exit}')
+
+  #echo $url
+
+  # Cria a pasta DIRTEMP
+  mkdir $DIRTEMP
+
+  # Faz download do pacote para a pasta DIRTEMP
+  wget -P "$DIRTEMP/" $url 
+
+  # rm -r $DIRTEMP
+
+}
+
 start() {
   # O primeiro argumento é o número da linha de início
   local inicio=${1:-1}  # Usa 1 como padrão se nenhum número for fornecidofile:///home/ferdinando-galera/Projects/download-full-packges-debian/download_package.sh
@@ -30,7 +57,7 @@ start() {
   
     #echo "$linha"
     # Faz o Download do pacote
-    ./download_package.sh "$linha"
+    downloadPackage "$linha"
 
     # Incrementa o contador
     ((contador++))
