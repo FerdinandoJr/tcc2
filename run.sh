@@ -8,6 +8,7 @@ DIR_TEMP="dirTemp" # Nome da pasta temporaria
 LIST_DEBIAN_PACKAGES="debian_packages.txt" #  Nome do arquivo que possui a lista de pacotes
 LOGFILE="error_log.txt"
 
+# Emite Erros do sistema
 logError(){
   # Mensagem de erro
   errorMessage="$1"
@@ -26,9 +27,35 @@ logError(){
   return 0
 }
 
+# Processa os arquivos de um pacote .dev
+processFiles() {
+  fileList="$1"
+
+  # Construindo a lista de arquivos executáveis
+  execlist=$(for f in $fileList; do
+    # Removendo os dois primeiros caracteres do caminho    
+    f="$DIR_TEMP/${f:2}"
+    echo 
+    if [ -f "$f" ] && [ -x "$f" ]; then
+      echo "$f"
+    fi
+  done)
+
+  #Processando cada arquivo executável
+  for f in $execlist; do
+    echo $f
+    output=$(objdump -R "$f" 2>/dev/null | grep "_JUMP_SLOT" | awk '{print $3}' | cut -d'@' -f1)
+  done
+  
+
+}
+
+# Faz download do pacote e desempacota
 downloadPackage() {
   # O nome do pacote é o primeiro argumento do script
   packageName="$1"
+
+  packageName="thunderbird"
 
   # Verifica se o nome do pacote foi fornecido
   if [ -z "$packageName" ]; then
@@ -38,7 +65,6 @@ downloadPackage() {
 
   # Pega a url do pacote
   url=$(apt-cache show "$packageName" 2>/dev/null | awk '/^Filename:/ {print "http://ubuntu.c3sl.ufpr.br/ubuntu/"$2; exit}')
-
 
   # Cria a pasta DIRTEMP
   mkdir $DIR_TEMP
@@ -56,12 +82,14 @@ downloadPackage() {
   
   # Desempacota o arquivo .deb"
   #flist=$(dpkg -X "$DIR_TEMP/$deb" "$DIR_TEMP") 
-  if ! dpkg -x "$DIR_TEMP/$deb" "$DIR_TEMP"; then
+  if ! output=$(dpkg -X "$DIR_TEMP/$deb" "$DIR_TEMP"); then
     logError "Erro ao desempacotar $deb"
     return 1
   fi
 
   echo "Pacote $deb desempacotado com sucesso."
+
+  processFiles "$output"
 
   return 0
 }
@@ -74,7 +102,7 @@ start() {
   local fim=${2:-$total_linhas}  # Usa o total de linhas como padrão se nenhum número for fornecido
   
 
-  touch $LOGFILE
+  touch $LOGFILE # Cria o arquivo para logs de erros
   rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP se ela existir
 
   # Verifica se o arquivo existe
@@ -96,7 +124,7 @@ start() {
   
     #echo "$linha"
     # Faz o Download e Desempacota o pacote
-    downloadPackage "$linha" || echo "ERROR: Falha ao baixar o pacote $linha"
+    downloadPackage "$linha" || echo "Erro ao processar $linha"
 
     # Incrementa o contador
     ((contador++))
