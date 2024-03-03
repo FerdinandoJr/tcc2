@@ -51,6 +51,18 @@ downloadPackage() {
 
   echo "Download do pacote $packageName completado com sucesso."
 
+  # Abre arquivo .deb no diretório dir
+  deb=$(basename "$url")
+  
+  # Desempacota o arquivo .deb"
+  #flist=$(dpkg -X "$DIR_TEMP/$deb" "$DIR_TEMP") 
+  if ! dpkg -x "$DIR_TEMP/$deb" "$DIR_TEMP"; then
+    logError "Erro ao desempacotar $deb"
+    return 1
+  fi
+
+  echo "Pacote $deb desempacotado com sucesso."
+
   return 0
 }
 
@@ -83,8 +95,8 @@ start() {
   sed -n "${inicio},${fim}p" "$LIST_DEBIAN_PACKAGES" | while IFS= read -r linha; do
   
     #echo "$linha"
-    # Faz o Download do pacote
-    downloadPackage "$linha"
+    # Faz o Download e Desempacota o pacote
+    downloadPackage "$linha" || echo "ERROR: Falha ao baixar o pacote $linha"
 
     # Incrementa o contador
     ((contador++))
