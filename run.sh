@@ -155,7 +155,7 @@ downloadPackage() {
   # Verifica se o download foi bem-sucedido
   if [ "$success" = false ]; then
     logError "Erro: Não foi possível baixar o pacote $fn usando nenhuma das URLs disponíveis."
-    exit 1
+    return 1
   fi
 
   # Abre arquivo .deb no diretório dir
@@ -214,13 +214,16 @@ start() {
     # Faz o Download e Desempacota o pacote
     downloadPackage "$linha" || echo "Erro ao processar $linha"
 
+    # Limpa o terminal
+    clear
+    
     # Incrementa o contador
-    # ((contador++))
+    ((contador++))
     
     # Sai do loop após ler 15 linhas
-    # if [ $contador -eq 15 ]; then
-    #   break
-    # fi
+    if [ $contador -eq 1 ]; then
+      break
+    fi
   done
 }
 
