@@ -27,7 +27,7 @@ logError(){
   return 0
 }
 
-cont=1
+
 filterIPCs() {
   fileName="$1"
   content="$2"
@@ -42,10 +42,10 @@ filterIPCs() {
   filtered_words=$(echo "$content" | grep -o -E "$REGEX" | sort | uniq)
 
   # Exibir o resultado
-  echo "$cont: $fileName"
+  echo "$fileName: "
   echo "$filtered_words"
 
-  ((cont++))
+
     
 }
 
