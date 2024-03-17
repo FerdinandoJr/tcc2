@@ -27,6 +27,28 @@ logError(){
   return 0
 }
 
+cont=1
+filterIPCs() {
+  fileName="$1"
+  content="$2"
+
+  # Caminho para o arquivo com as palavras-chave
+  KEYWORDS_FILE="ipcs.txt"
+
+  # Ler as palavras-chave e montar uma expressão regular com limites de palavra
+  REGEX=$(awk '{print "\\b"$0"\\b"}' $KEYWORDS_FILE | tr '\n' '|' | sed 's/|$//')
+
+  # Filtrar o texto e obter palavras únicas, armazenar na variável
+  filtered_words=$(echo "$content" | grep -o -E "$REGEX" | sort | uniq)
+
+  # Exibir o resultado
+  echo "$cont: $fileName"
+  echo "$filtered_words"
+
+  ((cont++))
+    
+}
+
 # Processa os arquivos de um pacote .dev
 processFiles() {
   fileList="$1"
@@ -43,11 +65,14 @@ processFiles() {
 
   #Processando cada arquivo executável
   for f in $execlist; do
-    echo $f
+    #echo $f
     output=$(objdump -R "$f" 2>/dev/null | grep "_JUMP_SLOT" | awk '{print $3}' | cut -d'@' -f1)
+
+    #echo $output >> "res.txt"
+    filterIPCs "$f" "$output"
+
   done
   
-
 }
 
 # Faz download do pacote e desempacota
@@ -63,25 +88,38 @@ downloadPackage() {
     return 1
   fi
 
-  # Pega a url do pacote
-  url=$(apt-cache show "$packageName" 2>/dev/null | awk '/^Filename:/ {print "http://ubuntu.c3sl.ufpr.br/ubuntu/"$2; exit}')
+  # Cria a pasta DIRTEMP se ela não existir
+  mkdir -p "$DIR_TEMP"
 
-  # Cria a pasta DIRTEMP
-  mkdir $DIR_TEMP
+  # Busca os nomes dos arquivos do pacote
+  filesName=$(apt-cache show thunderbird | grep "Filename" | cut -d ' ' -f 2)
+  success=false
 
- # Faz download do pacote para a pasta DIR_TEMP
-  if ! wget -P "$DIR_TEMP/" "$url"; then    
-    logError "Erro ao baixar o pacote $packageName"
-    return 1
+  # Tenta baixar cada arquivo
+  for fn in $filesName; do
+    url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
+    echo "Tentando baixar $url"
+
+    # Faz download do pacote para a pasta DIR_TEMP
+    if wget -P "$DIR_TEMP/" "$url"; then
+      echo "Download do pacote $packageName completado com sucesso."
+      success=true
+      break
+    else    
+      logError "Erro ao baixar o pacote, tentando a próxima URL."
+    fi
+  done
+
+  # Verifica se o download foi bem-sucedido
+  if [ "$success" = false ]; then
+    logError "Erro: Não foi possível baixar o pacote $fn usando nenhuma das URLs disponíveis."
+    exit 1
   fi
 
-  echo "Download do pacote $packageName completado com sucesso."
-
   # Abre arquivo .deb no diretório dir
-  deb=$(basename "$url")
-  
+  deb=$(basename "$url")  
+
   # Desempacota o arquivo .deb"
-  #flist=$(dpkg -X "$DIR_TEMP/$deb" "$DIR_TEMP") 
   if ! output=$(dpkg -X "$DIR_TEMP/$deb" "$DIR_TEMP"); then
     logError "Erro ao desempacotar $deb"
     return 1
