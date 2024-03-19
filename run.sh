@@ -155,6 +155,15 @@ downloadPackage() {
   # Verifica se o download foi bem-sucedido
   if [ "$success" = false ]; then
     logError "Erro: Não foi possível baixar o pacote $fn usando nenhuma das URLs disponíveis."
+
+    datetime=$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')
+
+    # Comando SQL para inserir um pacote .deb
+    insert_pacote="INSERT INTO deb_package (name, download_date, download_url) VALUES ('$packageName', '$datetime', '');"
+
+    # Executar comando SQL usando sqlite3 e pegar o ID do pacote inserido
+    sqlite3 $DATABASE "$insert_pacote"
+
     return 1
   fi
 
@@ -221,7 +230,7 @@ start() {
     ((contador++))
     
     # Sai do loop após ler 15 linhas
-    if [ $contador -eq 1 ]; then
+    if [ $contador -eq 5000 ]; then
       break
     fi
   done
@@ -229,4 +238,3 @@ start() {
 
 # Chama a função start com o número da linha como argumento
 start "$1" "$2"
-
