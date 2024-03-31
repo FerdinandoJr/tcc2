@@ -5,9 +5,15 @@ CREATE TABLE deb_package (
   download_url TEXT
 );
 
+CREATE TABLE file_type (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type_name TEXT NOT NULL UNIQUE
+);
+
 CREATE TABLE executable_files (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   package_id INTEGER,
+  file_type_id INTEGER,
   name TEXT NOT NULL,
   pipe BOOLEAN DEFAULT FALSE,
   fifo BOOLEAN DEFAULT FALSE,
@@ -28,8 +34,33 @@ CREATE TABLE executable_files (
   condition_variables BOOLEAN DEFAULT FALSE,
   barriers BOOLEAN DEFAULT FALSE,
   read_write_locks BOOLEAN DEFAULT FALSE,
-  FOREIGN KEY (package_id) REFERENCES deb_package (id)
+  FOREIGN KEY (package_id) REFERENCES deb_package (id),
+  FOREIGN KEY (file_type_id) REFERENCES file_type (id)
 );
+
+INSERT INTO file_type (type_name) VALUES ('ELF');
+INSERT INTO file_type (type_name) VALUES ('Symbolic link');
+INSERT INTO file_type (type_name) VALUES ('AWK Script');
+INSERT INTO file_type (type_name) VALUES ('Perl Script');
+INSERT INTO file_type (type_name) VALUES ('Bourne-Again Shell Script');
+INSERT INTO file_type (type_name) VALUES ('POSIX Shell Script');
+INSERT INTO file_type (type_name) VALUES ('Python Script');
+INSERT INTO file_type (type_name) VALUES ('Others');
+
+
+SELECT 
+    ft.type_name ,
+    COUNT(ef.id) AS count,
+    (COUNT(ef.id) * 100.0 / (SELECT COUNT(*) FROM executable_files)) AS percentage
+FROM 
+    executable_files ef
+INNER JOIN 
+    file_type ft ON ef.file_type_id = ft.id
+GROUP BY 
+    ft.type_name
+ORDER BY 
+    percentage DESC;
+
 
 SELECT  COUNT(*) AS package_total from deb_package dp; 
 
