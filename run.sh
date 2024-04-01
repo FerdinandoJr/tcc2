@@ -289,10 +289,10 @@ start() {
     # Incrementa o contador
     ((contador++))
     
-    # Sai do loop após ler 15 linhas
-    if [ $contador -eq 1000 ]; then
-      break
-    fi
+    # # Sai do loop após ler 15 linhas
+    # if [ $contador -eq 1000 ]; then
+    #   break
+    # fi
   done
 }
 
