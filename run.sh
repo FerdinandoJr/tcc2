@@ -147,7 +147,7 @@ processFiles() {
 
       path="${f#dirTemp/}"
 
-      insert_query="INSERT INTO executable_files VALUES (null, $packageId, $tipo, '$path', false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false , false);"
+      insert_query="INSERT INTO executable_files VALUES (null, $package_id, $tipo, '$path', false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false , false);"
 
       #echo $insert_query
 
@@ -199,7 +199,7 @@ downloadPackage() {
     datetime=$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')
 
     # Comando SQL para inserir um pacote .deb
-    insert_pacote="INSERT INTO deb_package (name, download_date, download_url) VALUES ('$packageName', '$datetime', '');"
+    insert_pacote="INSERT INTO deb_package (name, download_date, download_url, birthYear) VALUES ('$packageName', '$datetime', null, null);"
 
     # Executar comando SQL usando sqlite3 e pegar o ID do pacote inserido
     sqlite3 $DATABASE "$insert_pacote"
@@ -218,10 +218,29 @@ downloadPackage() {
 
   echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $deb desempacotado com sucesso."
 
+  # Define o ano atual
+  CURRENT_YEAR=$(date +"%Y")
+
+  birthYear=0
+  # Verifica se o arquivo de copyright existe
+  COPYRIGHT_FILE="$DIR_TEMP/usr/share/doc/$packageName/copyright"
+  if [ -f "$COPYRIGHT_FILE" ]; then
+    # Extrai todos os anos mencionados no arquivo de copyright, filtra por um intervalo razoável
+    # e pega o primeiro ano (o mais antigo)
+    birthYear=$(grep -o '[1-2][0-9]\{3\}' "$COPYRIGHT_FILE" | sort | uniq | awk -v min=1960 -v max=$CURRENT_YEAR '$0 >= min && $0 <= max' | head -n 1)
+    if [ -n "$birthYear" ]; then
+      echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Encontrado ano do pacote"
+    else
+      birthYear=0
+    fi  
+  else
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Arquivo de copyright não encontrado."
+  fi
+
   datetime=$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')
 
   # Comando SQL para inserir um pacote .deb
-  insert_pacote="INSERT INTO deb_package (name, download_date, download_url) VALUES ('$packageName', '$datetime', '$url');"
+  insert_pacote="INSERT INTO deb_package (name, download_date, download_url, birthYear) VALUES ('$packageName', '$datetime', '$url', $birthYear);"
 
   # Executar comando SQL usando sqlite3 e pegar o ID do pacote inserido
   package_id=$(sqlite3 $DATABASE "$insert_pacote; SELECT last_insert_rowid();")
@@ -240,7 +259,6 @@ start() {
   
   touch $LOGFILE # Cria o arquivo para logs de erros
   rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP se ela existir
-  echo "" > "typefile.txt"
   
   # Verifica se o arquivo existe
   if [ ! -f "$LIST_DEBIAN_PACKAGES" ]; then
@@ -271,14 +289,11 @@ start() {
     # Incrementa o contador
     ((contador++))
     
-    # # Sai do loop após ler 15 linhas
-    # if [ $contador -eq 1000 ]; then
-    #   break
-    # fi
+    # Sai do loop após ler 15 linhas
+    if [ $contador -eq 1000 ]; then
+      break
+    fi
   done
-
-  sort typefile.txt | uniq > typefile_uniq.txt
-
 }
 
 # Chama a função start com o número da linha como argumento

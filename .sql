@@ -2,7 +2,8 @@ CREATE TABLE deb_package (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   download_date DATETIME,
-  download_url TEXT
+  download_url TEXT,
+  birthYear INTEGER
 );
 
 CREATE TABLE file_type (
