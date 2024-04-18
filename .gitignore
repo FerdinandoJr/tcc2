@@ -1,5 +1,11 @@
 dirTemp/
+packages/
 
 error_log.txt
+
+.nohup.out.swo
+.nohup.out.swp
+.error_log.txt.swp
+.errow_log.txt.swo
 
 base.db3
