@@ -7,6 +7,8 @@ declare -A dynamic_dict
 contador=0
 
 # CONSTANTES
+DIR_FULL="$(pwd)"
+DIR_PACKAGES="packages"
 DIR_TEMP="dirTemp" # Nome da pasta temporaria
 LIST_DEBIAN_PACKAGES="debian_packages.txt" #  Nome do arquivo que possui a lista de pacotes
 LOGFILE="error_log.txt"
@@ -153,7 +155,7 @@ processFiles() {
 
       sqlite3 $DATABASE "$insert_query"
 
-      echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado análise de arquivo - $path"
+      echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado - $path"
     fi
   done
 
@@ -162,8 +164,8 @@ processFiles() {
 
 # Faz download do pacote e desempacota
 downloadPackage() {
-  # O nome do pacote é o primeiro argumento do script
-  packageName="$1"
+  packageName="$1" # O nome do pacote é o primeiro argumento do script
+  memPorcent="$2" # Porcentagem de espaço disponivel
 
   #packageName="thunderbird" pacote teste
 
@@ -183,14 +185,23 @@ downloadPackage() {
   # Tenta baixar cada arquivo
   for fn in $filesName; do
     url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
+    
+    # Verifica se o pacote já existe na pasta DIR_PACKAGES
+    if [ -f "$DIR_FULL/$DIR_PACKAGES/$(basename "$fn")" ]; then
+      echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $packageName encontrado na pasta $DIR_PACKAGES."
+      success=true
+      break
+    fi
+
     echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Tentando baixar pacote... ($url)"
-    # Faz download do pacote para a pasta DIR_TEMP
-    if wget -P "$DIR_TEMP/" "$url"; then
+    # Faz download do pacote para a pasta DIR_TEMP se ele ainda não existe
+    if wget -P "$DIR_PACKAGES/" "$url"; then
       echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Download do pacote $packageName completado com sucesso."
       success=true
       break
     fi
   done
+
 
   # Verifica se o download foi bem-sucedido
   if [ "$success" = false ]; then
@@ -210,13 +221,18 @@ downloadPackage() {
   # Abre arquivo .deb no diretório dir
   deb=$(basename "$url")  
 
-  # Desempacota o arquivo .deb"
-  if ! output=$(dpkg-deb -X "$DIR_TEMP/$deb" "$DIR_TEMP"); then
+  # Desempacota o arquivo .deb da pasta DIR_PACKAGES para pasta DIR_TEMP"
+  if ! output=$(dpkg-deb -X "$DIR_PACKAGES/$deb" "$DIR_TEMP"); then
     logError "Erro ao desempacotar $deb"
     return 1
   fi
 
   echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $deb desempacotado com sucesso."
+
+
+  if [ $memPorcent -gt 93 ]; then
+    rm $DIR_PACKAGES/$deb
+  fi
 
   # Define o ano atual
   CURRENT_YEAR=$(date +"%Y")
@@ -247,6 +263,8 @@ downloadPackage() {
 
   processFiles "$output" "$package_id" "$packageName"
 
+  rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP
+
   return 0
 }
 
@@ -258,6 +276,7 @@ start() {
   local fim=${2:-$total_linhas}  # Usa o total de linhas como padrão se nenhum número for fornecido
   
   touch $LOGFILE # Cria o arquivo para logs de erros
+  mkdir $DIR_PACKAGES # Cria pasta para salvar os pacotes
   rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP se ela existir
   
   # Verifica se o arquivo existe
@@ -273,15 +292,19 @@ start() {
   fi
 
 
+
   # e read dentro de um loop while para ler cada linha
   #tail -n +$inicio "$nome_do_arquivo" | while IFS= read -r linha; do
   sed -n "${inicio},${fim}p" "$LIST_DEBIAN_PACKAGES" | while IFS= read -r linha; do
   
-    #echo "$linha"
+    # Obtém a porcentagem do espaço do HD
+    memPorcent=$(df -h / | grep ^/ | awk '{print $5}' | tr -d '%')
+  
+    # echo "$linha"
     # Faz o Download e Desempacota o pacote
     echo ""
-    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $contador - $linha"
-    downloadPackage "$linha" || echo "Erro ao processar $linha"
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $contador - $linha (Mem $memPorcent%)"
+    downloadPackage "$linha" "$memPorcent"
 
     # Limpa o terminal
     #clear
@@ -290,9 +313,9 @@ start() {
     ((contador++))
     
     # # Sai do loop após ler 15 linhas
-    # if [ $contador -eq 1000 ]; then
-    #   break
-    # fi
+    if [ $contador -eq 1 ]; then
+      break
+    fi
   done
 }
 
