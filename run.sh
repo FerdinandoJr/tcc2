@@ -77,10 +77,12 @@ filterIPCs() {
   filtered_words=$(echo "$content" | grep -o -E "$REGEX" | sort | uniq)
 
   # Verifica cada item da lista no dicionário
+  veri=false
   for item in $filtered_words; do    
     key=${func_dict[$item]}
     if [[ ${dynamic_dict[$key]} -eq 0 ]]; then
      dynamic_dict[$key]=1
+     veri=true
     fi
   done
 
@@ -92,7 +94,9 @@ filterIPCs() {
 
   sqlite3 $DATABASE "$insert_query"
 
-  echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado filtragem de IPCs - $path"
+  if [ "$veri" = true ]; then
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] IPCs encontrados: $path"
+  fi
   
 }
 
@@ -102,14 +106,14 @@ processFiles() {
   package_id="$2"
   packageName="$3"
 
-  # Construindo a lista de arquivos executáveis
   execlist=$(for f in $fileList; do
-    # Removendo os dois primeiros caracteres do caminho    
+    # Removendo os dois primeiros caracteres do caminho
     f="$DIR_TEMP/${f:2}"
-
-    if [ -f "$f" ] && [ -x "$f" ]; then
+    
+    if ([ -f "$f" ] && [ -x "$f" ]) || [[ "$f" == *.so ]]; then
       echo "$f"
     fi
+
   done)
   
   # Processando cada arquivo executável
@@ -119,7 +123,7 @@ processFiles() {
 
     if echo "$filedesc" | grep -qi "ELF"; then
       # Para arquivos ELF, executa o objdump e processa adicionalmente
-      output=$(objdump -R "$f" | grep "_JUMP_SLOT" | awk '{print $3}' | cut -d'@' -f1)
+      output=$(objdump -R "$f" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
       # Verifica se objdump foi bem-sucedido
       if [ $? -eq 0 ]; then
         # Executa a função filterIPCs somente se objdump não deu erro
@@ -155,7 +159,7 @@ processFiles() {
 
       sqlite3 $DATABASE "$insert_query"
 
-      echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado - $path"
+      # echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado - $path"
     fi
   done
 
@@ -245,7 +249,7 @@ downloadPackage() {
     # e pega o primeiro ano (o mais antigo)
     birthYear=$(grep -o '[1-2][0-9]\{3\}' "$COPYRIGHT_FILE" | sort | uniq | awk -v min=1960 -v max=$CURRENT_YEAR '$0 >= min && $0 <= max' | head -n 1)
     if [ -n "$birthYear" ]; then
-      echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Encontrado ano do pacote"
+      echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Ano: $birthYear"
     else
       birthYear=0
     fi  
@@ -303,7 +307,7 @@ start() {
     # echo "$linha"
     # Faz o Download e Desempacota o pacote
     echo ""
-    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $contador - $linha (Mem $memPorcent%)"
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $((contador + 1)) - $linha (Mem $memPorcent%)"
     downloadPackage "$linha" "$memPorcent"
 
     # Limpa o terminal
@@ -313,9 +317,9 @@ start() {
     ((contador++))
     
     # # Sai do loop após ler 15 linhas
-    if [ $contador -eq 1 ]; then
-      break
-    fi
+    # if [ $contador -eq 2 ]; then
+    #   break
+    # fi
   done
 }
 
