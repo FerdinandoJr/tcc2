@@ -26,7 +26,6 @@ resetDict(){
   dynamic_dict["sysv_shared_memory"]=0
   dynamic_dict["posix_shared_memory"]=0
   dynamic_dict["mmap"]=0
-  dynamic_dict["anonymous_memory_mapping"]=0
   dynamic_dict["sysv_semaphores"]=0
   dynamic_dict["posix_semaphores"]=0
   dynamic_dict["eventfd"]=0
@@ -89,7 +88,7 @@ filterIPCs() {
 
   path="${fileName#dirTemp/}"
 
-  insert_query="INSERT INTO executable_files VALUES (null, $packageId, $tipo, '$path', ${dynamic_dict['pipe']}, ${dynamic_dict['fifo']}, ${dynamic_dict['socket']}, ${dynamic_dict['pseudo_terminal']}, ${dynamic_dict['sysv_message_queues']}, ${dynamic_dict['posix_message_queues']}, ${dynamic_dict['cross_memory_attach']}, ${dynamic_dict['sysv_shared_memory']}, ${dynamic_dict['posix_shared_memory']}, ${dynamic_dict['mmap']}, ${dynamic_dict['anonymous_memory_mapping']}, ${dynamic_dict['sysv_semaphores']}, ${dynamic_dict['posix_semaphores']}, ${dynamic_dict['eventfd']}, ${dynamic_dict['file_and_record_locks']}, ${dynamic_dict['mutexes']}, ${dynamic_dict['condition_variables']}, ${dynamic_dict['barriers']}, ${dynamic_dict['read_write_locks']});"
+  insert_query="INSERT INTO executable_files VALUES (null, $packageId, $tipo, '$path', ${dynamic_dict['pipe']}, ${dynamic_dict['fifo']}, ${dynamic_dict['socket']}, ${dynamic_dict['pseudo_terminal']}, ${dynamic_dict['sysv_message_queues']}, ${dynamic_dict['posix_message_queues']}, ${dynamic_dict['cross_memory_attach']}, ${dynamic_dict['sysv_shared_memory']}, ${dynamic_dict['posix_shared_memory']}, ${dynamic_dict['mmap']}, ${dynamic_dict['sysv_semaphores']}, ${dynamic_dict['posix_semaphores']}, ${dynamic_dict['eventfd']}, ${dynamic_dict['file_and_record_locks']}, ${dynamic_dict['mutexes']}, ${dynamic_dict['condition_variables']}, ${dynamic_dict['barriers']}, ${dynamic_dict['read_write_locks']});"
 
   #echo $insert_query
 

@@ -44,8 +44,7 @@ func_dict["shm_open"]="posix_shared_memory"
 func_dict["shm_unlink"]="posix_shared_memory"
 
 func_dict["mmap"]="mmap"
-func_dict["munmap"]="anonymous_memory_mapping"
-func_dict["msync"]="anonymous_memory_mapping"
+func_dict["mmap64"]="mmap"
 
 func_dict["semget"]="sysv_semaphores"
 func_dict["semop"]="sysv_semaphores"
@@ -64,7 +63,6 @@ func_dict["eventfd2"]="eventfd"
 func_dict["eventfd_read"]="eventfd"
 func_dict["eventfd_write"]="eventfd"
 func_dict["flock"]="file_and_record_locks"
-func_dict["fcntl"]="file_and_record_locks"
 func_dict["lockf"]="file_and_record_locks"
 
 func_dict["pthread_mutex_init"]="mutexes"

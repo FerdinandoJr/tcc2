@@ -50,7 +50,6 @@ eventfd2
 eventfd_read
 eventfd_write
 flock
-fcntl
 lockf
 pthread_mutex_init
 pthread_mutex_destroy
