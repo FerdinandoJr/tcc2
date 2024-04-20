@@ -40,6 +40,7 @@ CREATE TABLE executable_files (
 );
 
 INSERT INTO file_type (type_name) VALUES ('ELF');
+INSERT INTO file_type (type_name) VALUES ('ELF Shared Object');
 INSERT INTO file_type (type_name) VALUES ('Symbolic link');
 INSERT INTO file_type (type_name) VALUES ('AWK Script');
 INSERT INTO file_type (type_name) VALUES ('Perl Script');

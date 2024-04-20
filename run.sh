@@ -62,6 +62,7 @@ filterIPCs() {
   fileName="$1"
   content="$2"
   packageId="$3"
+  tipo="$4"
   
 
   # Reseta o dicionario
@@ -88,7 +89,7 @@ filterIPCs() {
 
   path="${fileName#dirTemp/}"
 
-  insert_query="INSERT INTO executable_files VALUES (null, $packageId, 1, '$path', ${dynamic_dict['pipe']}, ${dynamic_dict['fifo']}, ${dynamic_dict['socket']}, ${dynamic_dict['pseudo_terminal']}, ${dynamic_dict['sysv_message_queues']}, ${dynamic_dict['posix_message_queues']}, ${dynamic_dict['cross_memory_attach']}, ${dynamic_dict['sysv_shared_memory']}, ${dynamic_dict['posix_shared_memory']}, ${dynamic_dict['mmap']}, ${dynamic_dict['anonymous_memory_mapping']}, ${dynamic_dict['sysv_semaphores']}, ${dynamic_dict['posix_semaphores']}, ${dynamic_dict['eventfd']}, ${dynamic_dict['file_and_record_locks']}, ${dynamic_dict['mutexes']}, ${dynamic_dict['condition_variables']}, ${dynamic_dict['barriers']}, ${dynamic_dict['read_write_locks']});"
+  insert_query="INSERT INTO executable_files VALUES (null, $packageId, $tipo, '$path', ${dynamic_dict['pipe']}, ${dynamic_dict['fifo']}, ${dynamic_dict['socket']}, ${dynamic_dict['pseudo_terminal']}, ${dynamic_dict['sysv_message_queues']}, ${dynamic_dict['posix_message_queues']}, ${dynamic_dict['cross_memory_attach']}, ${dynamic_dict['sysv_shared_memory']}, ${dynamic_dict['posix_shared_memory']}, ${dynamic_dict['mmap']}, ${dynamic_dict['anonymous_memory_mapping']}, ${dynamic_dict['sysv_semaphores']}, ${dynamic_dict['posix_semaphores']}, ${dynamic_dict['eventfd']}, ${dynamic_dict['file_and_record_locks']}, ${dynamic_dict['mutexes']}, ${dynamic_dict['condition_variables']}, ${dynamic_dict['barriers']}, ${dynamic_dict['read_write_locks']});"
 
   #echo $insert_query
 
@@ -106,15 +107,18 @@ processFiles() {
   package_id="$2"
   packageName="$3"
 
+  #contDiff=0
+
   execlist=$(for f in $fileList; do
     # Removendo os dois primeiros caracteres do caminho
     f="$DIR_TEMP/${f:2}"
     
-    if ([ -f "$f" ] && [ -x "$f" ]) || [[ "$f" == *.so ]]; then
+    if [[ (-f "$f" && -x "$f") || ("$f" == *.so || "$f" == *.so.*) ]]; then
       echo "$f"
     fi
 
   done)
+  
   
   # Processando cada arquivo executável
   for f in $execlist; do
@@ -125,30 +129,37 @@ processFiles() {
       # Para arquivos ELF, executa o objdump e processa adicionalmente
       output=$(objdump -R "$f" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
       # Verifica se objdump foi bem-sucedido
+
+      tipo=1
+      if echo "$filedesc" | grep -qi "shared object"; then
+        tipo=2
+      fi
+
       if [ $? -eq 0 ]; then
+        #((contDiff++))
         # Executa a função filterIPCs somente se objdump não deu erro
-        filterIPCs "$f" "$output" "$package_id"
+        filterIPCs "$f" "$output" "$package_id" "$tipo"  
       else
         logError "objdump encontrou um erro processando o arquivo $f do pacote $package_name ($package_id)"
       fi
     else
-      tipo=8
+      tipo=9
       if echo "$filedesc" | grep -qi "symbolic link"; then
-        tipo=2
+        tipo=3
       elif echo "$filedesc" | grep -qi ".awk"; then
-        tipo=3
-      elif echo "$filedesc" | grep -qi "awk script"; then
-        tipo=3
-      elif echo "$filedesc" | grep -qi "perl script"; then
         tipo=4
-      elif echo "$filedesc" | grep -qi "bourne-again shell script"; then
+      elif echo "$filedesc" | grep -qi "awk script"; then
+        tipo=4
+      elif echo "$filedesc" | grep -qi "perl script"; then
         tipo=5
-      elif echo "$filedesc" | grep -qi "posix shell script"; then
+      elif echo "$filedesc" | grep -qi "bourne-again shell script"; then
         tipo=6
-      elif echo "$filedesc" | grep -qi "python script"; then
+      elif echo "$filedesc" | grep -qi "posix shell script"; then
         tipo=7
-      else
+      elif echo "$filedesc" | grep -qi "python script"; then
         tipo=8
+      else
+        tipo=9
       fi
 
       path="${f#dirTemp/}"
@@ -162,6 +173,16 @@ processFiles() {
       # echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado - $path"
     fi
   done
+
+
+  # contFiles=$(find ./dirTemp/ -type f -exec file {} \; | grep ELF | cut -d ':' -f 1 | wc -l)
+  # if [ $contDiff -ne $contFiles ]; then
+  #   echo "$packageName: $contFiles != $contDiff" >> "diff.txt"
+  # # else
+  # #   echo "$packageName: $contFiles == $contDiff" >> "diff.txt"
+  # fi
+  
+
 
   return 0
 }
@@ -274,7 +295,7 @@ downloadPackage() {
 
 start() {
   # O primeiro argumento é o número da linha de início
-  local inicio=${1:-1}  # Usa 1 como padrão se nenhum número for fornecidofile:///home/ferdinando-galera/Projects/download-full-packges-debian/download_package.sh
+  local inicio=${1:-1}  # Usa 1 como padrão se nenhum número for fornecido
   
   local total_linhas=$(wc -l < "$LIST_DEBIAN_PACKAGES")
   local fim=${2:-$total_linhas}  # Usa o total de linhas como padrão se nenhum número for fornecido
@@ -317,7 +338,7 @@ start() {
     ((contador++))
     
     # # Sai do loop após ler 15 linhas
-    # if [ $contador -eq 2 ]; then
+    # if [ $contador -eq 1 ]; then
     #   break
     # fi
   done
