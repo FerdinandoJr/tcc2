@@ -163,7 +163,7 @@ processFiles() {
 
       path="${f#dirTemp/}"
 
-      insert_query="INSERT INTO executable_files VALUES (null, $package_id, $tipo, '$path', false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false , false);"
+      insert_query="INSERT INTO executable_files VALUES (null, $package_id, $tipo, '$path', false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false,false ,false ,false ,false ,false ,false , false);"
 
       #echo $insert_query
 
