@@ -64,6 +64,7 @@ func_dict["eventfd_read"]="eventfd"
 func_dict["eventfd_write"]="eventfd"
 func_dict["flock"]="file_and_record_locks"
 func_dict["lockf"]="file_and_record_locks"
+func_dict["lockf64"]="file_and_record_locks"
 
 func_dict["pthread_mutex_init"]="mutexes"
 func_dict["pthread_mutex_destroy"]="mutexes"

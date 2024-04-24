@@ -33,8 +33,7 @@ shmctl
 shm_open
 shm_unlink
 mmap
-munmap
-msync
+mmap64
 semget
 semop
 semctl
@@ -51,6 +50,7 @@ eventfd_read
 eventfd_write
 flock
 lockf
+lockf64
 pthread_mutex_init
 pthread_mutex_destroy
 pthread_mutex_lock
