@@ -289,8 +289,6 @@ downloadPackage() {
   # Comando SQL para inserir um pacote .deb
   insert_pacote="INSERT INTO deb_package (name ,download_date, download_url, birthYear, rank, installed_users, regular_users, infrequent_users, recent_upgrafes, missing_info_users, maintainer) VALUES ('$packageName', '$datetime', '$url', $birthYear, $rank, $inst, $vote, $old, $recent, $no_files, '$maintainerFormat');"
 
-  echo "$insert_pacote" >> "teste.txt"
-
   # Executar comando SQL usando sqlite3 e pegar o ID do pacote inserido
   package_id=$(sqlite3 $DATABASE "$insert_pacote; SELECT last_insert_rowid();")
 
