@@ -213,7 +213,8 @@ downloadPackage() {
 
   # Tenta baixar cada arquivo
   for fn in $filesName; do
-    url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn" # Mudar esse caminho?
+    # url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
+    url="http://ftp.br.debian.org/debian/$fn"
     
     # Verifica se o pacote já existe na pasta DIR_PACKAGES
     if [ -f "$DIR_FULL/$DIR_PACKAGES/$(basename "$fn")" ]; then
