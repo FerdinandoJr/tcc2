@@ -3,7 +3,14 @@ CREATE TABLE deb_package (
   name TEXT NOT NULL,
   download_date DATETIME,
   download_url TEXT,
-  birthYear INTEGER
+  birthYear INTEGER,
+  rank INTEGER,
+  installed_users INTEGER,
+  regular_users INTEGER,
+  infrequent_users INTEGER,
+  recent_upgrafes INTEGER,
+  missing_info_users INTEGER,
+  maintainer TEXT
 );
 
 CREATE TABLE file_type (

@@ -188,10 +188,15 @@ processFiles() {
 
 # Faz download do pacote e desempacota
 downloadPackage() {
-  packageName="$1" # O nome do pacote é o primeiro argumento do script
-  memPorcent="$2" # Porcentagem de espaço disponivel
-
-  #packageName="thunderbird" pacote teste
+  memPorcent="$1" # Porcentagem de espaço disponivel
+  rank="$2"
+  packageName="$3"
+  inst="$4"
+  vote="$5"
+  old="$6"
+  recent="$7"
+  no_files="$8"
+  maintainer="$9"
 
   # Verifica se o nome do pacote foi fornecido
   if [ -z "$packageName" ]; then
@@ -208,7 +213,7 @@ downloadPackage() {
 
   # Tenta baixar cada arquivo
   for fn in $filesName; do
-    url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
+    url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn" # Mudar esse caminho?
     
     # Verifica se o pacote já existe na pasta DIR_PACKAGES
     if [ -f "$DIR_FULL/$DIR_PACKAGES/$(basename "$fn")" ]; then
@@ -234,7 +239,7 @@ downloadPackage() {
     datetime=$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')
 
     # Comando SQL para inserir um pacote .deb
-    insert_pacote="INSERT INTO deb_package (name, download_date, download_url, birthYear) VALUES ('$packageName', '$datetime', null, null);"
+    insert_pacote="INSERT INTO deb_package (name ,download_date, download_url, birthYear, rank, installed_users, regular_users, infrequent_users, recent_upgrafes, missing_info_users, maintainer) VALUES ('$packageName', '$datetime', null, null, $rank, $inst, $vote, $old, $recent, $no_files, '$maintainer');"
 
     # Executar comando SQL usando sqlite3 e pegar o ID do pacote inserido
     sqlite3 $DATABASE "$insert_pacote"
@@ -280,7 +285,7 @@ downloadPackage() {
   datetime=$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')
 
   # Comando SQL para inserir um pacote .deb
-  insert_pacote="INSERT INTO deb_package (name, download_date, download_url, birthYear) VALUES ('$packageName', '$datetime', '$url', $birthYear);"
+  insert_pacote="INSERT INTO deb_package (name ,download_date, download_url, birthYear, rank, installed_users, regular_users, infrequent_users, recent_upgrafes, missing_info_users, maintainer) VALUES ('$packageName', '$datetime', '$url', $birthYear, $rank, $inst, $vote, $old, $recent, $no_files, '$maintainer');"
 
   # Executar comando SQL usando sqlite3 e pegar o ID do pacote inserido
   package_id=$(sqlite3 $DATABASE "$insert_pacote; SELECT last_insert_rowid();")
@@ -324,11 +329,19 @@ start() {
     # Obtém a porcentagem do espaço do HD
     memPorcent=$(df -h / | grep ^/ | awk '{print $5}' | tr -d '%')
   
-    # echo "$linha"
+    rank=$(echo "$linha" | awk '{print $1}')
+    name=$(echo "$linha" | awk '{print $2}')
+    inst=$(echo "$linha" | awk '{print $3}')
+    vote=$(echo "$linha" | awk '{print $4}')
+    old=$(echo "$linha" | awk '{print $5}')
+    recent=$(echo "$linha" | awk '{print $6}')
+    no_files=$(echo "$linha" | awk '{print $7}')
+    maintainer=$(echo "$linha" | awk '{print substr($0, index($0,$8))}')
+
     # Faz o Download e Desempacota o pacote
     echo ""
     echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $((contador + 1)) - $linha (Mem $memPorcent%)"
-    downloadPackage "$linha" "$memPorcent"
+    downloadPackage "$memPorcent" "$rank" "$name" "$inst" "$vote" "$old" "$recent" "$no_files" "$maintainer"
 
     # Limpa o terminal
     #clear
@@ -336,8 +349,8 @@ start() {
     # Incrementa o contador
     ((contador++))
     
-    # # Sai do loop após ler 15 linhas
-    # if [ $contador -eq 1 ]; then
+    # Sai do loop após ler 15 linhas
+    # if [ $contador -eq 10 ]; then
     #   break
     # fi
   done
