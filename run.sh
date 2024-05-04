@@ -346,7 +346,7 @@ start() {
 
     # Faz o Download e Desempacota o pacote
     echo ""
-    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $((contador + 1)) - $linha (Mem $memPorcent%)"
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Pacote $((contador + 1)) - $name (Mem $memPorcent%)"
     downloadPackage "$memPorcent" "$rank" "$name" "$inst" "$vote" "$old" "$recent" "$no_files" "$maintainer"
 
     # Limpa o terminal
