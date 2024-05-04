@@ -197,7 +197,8 @@ downloadPackage() {
   recent="$7"
   no_files="$8"
   maintainer="$9"
-
+  maintainerFormat="${maintainer//\'/\'\'}"
+  
   # Verifica se o nome do pacote foi fornecido
   if [ -z "$packageName" ]; then
     logError "Erro: Nome do pacote não fornecido."
@@ -234,13 +235,13 @@ downloadPackage() {
 
 
   # Verifica se o download foi bem-sucedido
-  if [ "$success" = false ]; then
-    echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Não foi possível baixar o pacote $packageName usando nenhuma das URLs disponíveis."
+  if [ "$success" = false ]; then  
+    logError "Não foi possível baixar o pacote $packageName"
 
     datetime=$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')
 
     # Comando SQL para inserir um pacote .deb
-    insert_pacote="INSERT INTO deb_package (name ,download_date, download_url, birthYear, rank, installed_users, regular_users, infrequent_users, recent_upgrafes, missing_info_users, maintainer) VALUES ('$packageName', '$datetime', null, null, $rank, $inst, $vote, $old, $recent, $no_files, '$maintainer');"
+    insert_pacote="INSERT INTO deb_package (name ,download_date, download_url, birthYear, rank, installed_users, regular_users, infrequent_users, recent_upgrafes, missing_info_users, maintainer) VALUES ('$packageName', '$datetime', null, null, $rank, $inst, $vote, $old, $recent, $no_files, '$maintainerFormat');"
 
     # Executar comando SQL usando sqlite3 e pegar o ID do pacote inserido
     sqlite3 $DATABASE "$insert_pacote"
@@ -286,12 +287,18 @@ downloadPackage() {
   datetime=$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')
 
   # Comando SQL para inserir um pacote .deb
-  insert_pacote="INSERT INTO deb_package (name ,download_date, download_url, birthYear, rank, installed_users, regular_users, infrequent_users, recent_upgrafes, missing_info_users, maintainer) VALUES ('$packageName', '$datetime', '$url', $birthYear, $rank, $inst, $vote, $old, $recent, $no_files, '$maintainer');"
+  insert_pacote="INSERT INTO deb_package (name ,download_date, download_url, birthYear, rank, installed_users, regular_users, infrequent_users, recent_upgrafes, missing_info_users, maintainer) VALUES ('$packageName', '$datetime', '$url', $birthYear, $rank, $inst, $vote, $old, $recent, $no_files, '$maintainerFormat');"
+
+  echo "$insert_pacote" >> "teste.txt"
 
   # Executar comando SQL usando sqlite3 e pegar o ID do pacote inserido
   package_id=$(sqlite3 $DATABASE "$insert_pacote; SELECT last_insert_rowid();")
 
-  processFiles "$output" "$package_id" "$packageName"
+  if [ $? -eq 0 ]; then
+    processFiles "$output" "$package_id" "$packageName"
+  else
+    logError "Erro ao obter package_id - $packageName $deb"
+  fi  
 
   rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP
 
