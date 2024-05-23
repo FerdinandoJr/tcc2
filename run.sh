@@ -101,90 +101,141 @@ filterIPCs() {
 }
 
 # Processa os arquivos de um pacote .dev
+
 processFiles() {
   fileList="$1"
   package_id="$2"
   packageName="$3"
 
-  #contDiff=0
-
-  execlist=$(for f in $fileList; do
-    # Removendo os dois primeiros caracteres do caminho
+  for f in $fileList; do
+    # Remove os dois primeiros caracteres do caminho e ajusta para o diretório temporário
     f="$DIR_TEMP/${f:2}"
     
-    if [[ (-f "$f" && -x "$f") || ("$f" == *.so || "$f" == *.so.*) ]]; then
-      echo "$f"
+    # Verifica se o arquivo não é um link simbólico
+    if [[ -L "$f" ]]; then
+      continue
     fi
 
-  done)
-  
-  
-  # Processando cada arquivo executável
-  for f in $execlist; do
-    # Obtém a descrição completa do arquivo
-    filedesc=$(file "$f")
+    # Determina se o arquivo é um arquivo regular e executável ou uma biblioteca compartilhada
+    if [[ -f "$f" && (-x "$f" || "$f" == *.so || "$f" == *.so.*) ]]; then
+      # Obtém a descrição do tipo de arquivo
+      filedesc=$(file "$f")
 
-    if echo "$filedesc" | grep -qi "ELF"; then
-      # Para arquivos ELF, executa o objdump e processa adicionalmente
-      output=$(objdump -R "$f" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
-      # Verifica se objdump foi bem-sucedido
+      # Verifica se o arquivo é um ELF
+      if echo "$filedesc" | grep -qi "ELF"; then
+        tipo=0
 
-      tipo=1
-      if echo "$filedesc" | grep -qi "shared object"; then
-        tipo=2
-      fi
+        # Determina o tipo de arquivo ELF
+        if echo "$filedesc" | grep -q "shared object"; then
+          tipo=2  # Biblioteca compartilhada
+        elif echo "$filedesc" | grep -q "statically linked"; then
+          tipo=3  # Executável estático
+        else
+          tipo=1  # Executável dinâmico
+        fi
 
-      if [ $? -eq 0 ]; then
-        #((contDiff++))
-        # Executa a função filterIPCs somente se objdump não deu erro
-        filterIPCs "$f" "$output" "$package_id" "$tipo"  
+        # Executa ações com base no tipo de arquivo ELF
+        case $tipo in
+          1) echo "Processando executável dinâmico: $f";;
+          2) echo "Processando biblioteca compartilhada: $f";;
+          3) echo "Processando executável estático: $f";;
+        esac
+
       else
-        logError "objdump encontrou um erro processando o arquivo $f do pacote $package_name ($package_id)"
+        # Caso não seja um arquivo ELF, continua para o próximo arquivo
+        continue
       fi
-    else
-      tipo=9
-      if echo "$filedesc" | grep -qi "symbolic link"; then
-        tipo=3
-      elif echo "$filedesc" | grep -qi ".awk"; then
-        tipo=4
-      elif echo "$filedesc" | grep -qi "awk script"; then
-        tipo=4
-      elif echo "$filedesc" | grep -qi "perl script"; then
-        tipo=5
-      elif echo "$filedesc" | grep -qi "bourne-again shell script"; then
-        tipo=6
-      elif echo "$filedesc" | grep -qi "posix shell script"; then
-        tipo=7
-      elif echo "$filedesc" | grep -qi "python script"; then
-        tipo=8
-      else
-        tipo=9
-      fi
-
-      path="${f#dirTemp/}"
-
-      insert_query="INSERT INTO executable_files VALUES (null, $package_id, $tipo, '$path', false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false,false ,false ,false ,false ,false ,false , false);"
-
-      #echo $insert_query
-
-      sqlite3 $DATABASE "$insert_query"
-
-      # echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado - $path"
     fi
   done
 
+  return 0
+}
 
-  # contFiles=$(find ./dirTemp/ -type f -exec file {} \; | grep ELF | cut -d ':' -f 1 | wc -l)
-  # if [ $contDiff -ne $contFiles ]; then
-  #   echo "$packageName: $contFiles != $contDiff" >> "diff.txt"
-  # # else
-  # #   echo "$packageName: $contFiles == $contDiff" >> "diff.txt"
-  # fi
+
+# processFiles() {
+#   fileList="$1"
+#   package_id="$2"
+#   packageName="$3"
+
+#   #contDiff=0
+
+#   execlist=$(for f in $fileList; do
+#     # Removendo os dois primeiros caracteres do caminho
+#     f="$DIR_TEMP/${f:2}"
+    
+#     if [[ (-f "$f" && -x "$f") || ("$f" == *.so || "$f" == *.so.*) ]]; then
+#       echo "$f"
+#     fi
+
+#   done)
+  
+  
+#   # Processando cada arquivo executável
+#   for f in $execlist; do
+#     # Obtém a descrição completa do arquivo
+#     filedesc=$(file "$f")
+
+#     if echo "$filedesc" | grep -qi "ELF"; then
+#       # Para arquivos ELF, executa o objdump e processa adicionalmente
+#       output=$(objdump -R "$f" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
+#       # Verifica se objdump foi bem-sucedido
+
+#       tipo=1
+#       if echo "$filedesc" | grep -qi "shared object"; then
+#         tipo=2
+#       fi
+
+#       if [ $? -eq 0 ]; then
+#         #((contDiff++))
+#         # Executa a função filterIPCs somente se objdump não deu erro
+#         filterIPCs "$f" "$output" "$package_id" "$tipo"  
+#       else
+#         logError "objdump encontrou um erro processando o arquivo $f do pacote $package_name ($package_id)"
+#       fi
+#     else
+#       tipo=9
+#       if echo "$filedesc" | grep -qi "symbolic link"; then
+#         tipo=3
+#       elif echo "$filedesc" | grep -qi ".awk"; then
+#         tipo=4
+#       elif echo "$filedesc" | grep -qi "awk script"; then
+#         tipo=4
+#       elif echo "$filedesc" | grep -qi "perl script"; then
+#         tipo=5
+#       elif echo "$filedesc" | grep -qi "bourne-again shell script"; then
+#         tipo=6
+#       elif echo "$filedesc" | grep -qi "posix shell script"; then
+#         tipo=7
+#       elif echo "$filedesc" | grep -qi "python script"; then
+#         tipo=8
+#       else
+#         tipo=9
+#       fi
+
+#       path="${f#dirTemp/}"
+
+#       insert_query="INSERT INTO executable_files VALUES (null, $package_id, $tipo, '$path', false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false,false ,false ,false ,false ,false ,false , false);"
+
+#       #echo $insert_query
+
+#       sqlite3 $DATABASE "$insert_query"
+
+#       # echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado - $path"
+#     fi
+#   done
+
+
+#   # contFiles=$(find ./dirTemp/ -type f -exec file {} \; | grep ELF | cut -d ':' -f 1 | wc -l)
+#   # if [ $contDiff -ne $contFiles ]; then
+#   #   echo "$packageName: $contFiles != $contDiff" >> "diff.txt"
+#   # # else
+#   # #   echo "$packageName: $contFiles == $contDiff" >> "diff.txt"
+#   # fi
   
 
 
-  return 0
-}
+#   return 0
+# }
 
 # Faz download do pacote e desempacota
 downloadPackage() {
@@ -214,7 +265,7 @@ downloadPackage() {
 
   # Tenta baixar cada arquivo
   for fn in $filesName; do
-    # url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
+    #url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
     url="http://ftp.br.debian.org/debian/$fn"
     
     # Verifica se o pacote já existe na pasta DIR_PACKAGES
@@ -355,10 +406,10 @@ start() {
     # Incrementa o contador
     ((contador++))
     
-    # Sai do loop após ler 15 linhas
-    # if [ $contador -eq 10 ]; then
-    #   break
-    # fi
+    # Sai do loop após ler X linhas
+    if [ $contador -eq 1 ]; then
+      break
+    fi
   done
 }
 
