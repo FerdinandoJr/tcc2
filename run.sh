@@ -117,33 +117,28 @@ processFiles() {
     fi
 
     # Determina se o arquivo é um arquivo regular e executável ou uma biblioteca compartilhada
-    if [[ -f "$f" && (-x "$f" || "$f" == *.so || "$f" == *.so.*) ]]; then
-      # Obtém a descrição do tipo de arquivo
-      filedesc=$(file "$f")
+    #if [[ -f "$f" && (-x "$f" || "$f" == *.so || "$f" == *.so.*) ]]; then
+    
+    filedesc=$(file "$f")
+    LibDirs=$(ldconfig -p | tail -n +2 | grep -o '/.*/' | sort -u)
 
-      # Verifica se o arquivo é um ELF
-      if echo "$filedesc" | grep -qi "ELF"; then
-        tipo=0
-
-        # Determina o tipo de arquivo ELF
-        if echo "$filedesc" | grep -q "shared object"; then
-          tipo=2  # Biblioteca compartilhada
-        elif echo "$filedesc" | grep -q "statically linked"; then
-          tipo=3  # Executável estático
-        else
-          tipo=1  # Executável dinâmico
+    # Verifica se é biblioteca
+    if [[ -f "$f" && ( "$f" == *.so || "$f" == *.so.* ) && echo "$filedesc" | grep -qi 'ELF.*dynamically' ]]; then
+      for dir in $LibDirs; do
+        if [[ "$f" == "$dir"* ]]; then
+          # Conta como biblioteca
+          # processa IPCs
+          continue 2
         fi
+      done
 
-        # Executa ações com base no tipo de arquivo ELF
-        case $tipo in
-          1) echo "Processando executável dinâmico: $f";;
-          2) echo "Processando biblioteca compartilhada: $f";;
-          3) echo "Processando executável estático: $f";;
-        esac
-
-      else
-        # Caso não seja um arquivo ELF, continua para o próximo arquivo
-        continue
+    # Verifica se é executável em diretório de executáveis
+    elif [[ -f "$f" && ( "$f" == /bin/* || "$f" == /sbin/* || "$f" == /usr/bin/* || "$f" == /usr/sbin/* ) ]]; then
+      if echo "$filedesc" | grep -qi 'ELF.*dynamically'; then
+        # Conta como executável
+        # processa IPCs
+      else 
+        # Contabiliza tipo de arquivo
       fi
     fi
   done
