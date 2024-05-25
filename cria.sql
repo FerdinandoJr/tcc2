@@ -45,13 +45,11 @@ CREATE TABLE executable_files (
   FOREIGN KEY (file_type_id) REFERENCES file_type (id)
 );
 
-INSERT INTO file_type (type_name) VALUES ('ELF');
-INSERT INTO file_type (type_name) VALUES ('ELF Shared Object');
-INSERT INTO file_type (type_name) VALUES ('Symbolic link');
-INSERT INTO file_type (type_name) VALUES ('AWK Script');
-INSERT INTO file_type (type_name) VALUES ('Perl Script');
-INSERT INTO file_type (type_name) VALUES ('Bourne-Again Shell Script');
+INSERT INTO file_type (type_name) VALUES ('ELF executable');
+INSERT INTO file_type (type_name) VALUES ('ELF shared-library');
+INSERT INTO file_type (type_name) VALUES ('ELF statically');
 INSERT INTO file_type (type_name) VALUES ('POSIX Shell Script');
 INSERT INTO file_type (type_name) VALUES ('Python Script');
-INSERT INTO file_type (type_name) VALUES ('Others');
-
+INSERT INTO file_type (type_name) VALUES ('Perl Script');
+INSERT INTO file_type (type_name) VALUES ('Bourne-Again Shell Script');
+INSERT INTO file_type (type_name) VALUES ('AWK Script');

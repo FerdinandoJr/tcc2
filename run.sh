@@ -13,6 +13,20 @@ DIR_TEMP="dirTemp" # Nome da pasta temporaria
 LIST_DEBIAN_PACKAGES="debian_packages.txt" #  Nome do arquivo que possui a lista de pacotes
 LOGFILE="error_log.txt"
 DATABASE="base.db3" # Defina o caminho do seu banco de dados SQLite
+LIB_DIRS=( # Lista de caminhos de biblioteca
+  "/usr/local/lib"
+  "/lib/x86_64-linux-gnu"
+  "/usr/lib/x86_64-linux-gnu"
+  "/lib"
+  "/usr/lib"
+)
+EXE_DIRS=( 
+  "/bin"
+  "/sbin"
+  "/usr/bin"
+  "/usr/sbin"
+)
+
 
 # Reseta o dicionario dinamico
 resetDict(){
@@ -100,45 +114,110 @@ filterIPCs() {
   
 }
 
-# Processa os arquivos de um pacote .dev
+# Função para verificar se o caminho está na lista de diretórios expecificos
+checkExePath() {
+  local path="$1"
+  
+  for dir in "${EXE_DIRS[@]}"; do
+    if [[ "$path" == "$dir"* ]]; then
+      return 0
+    fi
+  done
+  
+  return 1
+}
+# Função para verificar se o caminho está na lista de diretórios de biblioteca
+checkLibraryPath() {
+  local path="$1"
+  
+  for dir in "${LIB_DIRS[@]}"; do
+    if [[ "$path" == "$dir"* ]]; then
+      return 0
+    fi
+  done
+  
+  return 1
+}
 
+
+createRegisterFile() {
+  package_id="$1"
+  fileType="$2"
+  filePath="$3"
+
+  if echo "$fileType" | grep -qi 'ELF.*static'; then
+    typeId=3
+  elif echo "$fileType" | grep -qi "posix shell script"; then
+    typeId=4  
+  elif echo "$fileType" | grep -qi "python script"; then
+    typeId=5
+  elif echo "$fileType" | grep -qi "perl script"; then
+    typeId=6
+  elif echo "$fileType" | grep -qi "bourne-again shell script"; then
+    typeId=7
+  elif echo "$fileType" | grep -qi ".awk"; then
+    typeId=8
+  elif echo "$fileType" | grep -qi "awk script"; then
+    typeId=8    
+  else 
+    # ARQUIVOS QUE NAO É IMPORTANTE REGISTRAR
+    echo "$package_id) $filePath: $fileType" >> "isNotElf.txt"
+    return 1
+  fi
+  
+  path="${filePath#dirTemp/}"
+  insert_query="INSERT INTO executable_files VALUES (null, $package_id, $typeId, '$path', false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false,false ,false ,false ,false ,false ,false , false);"
+
+  sqlite3 $DATABASE "$insert_query"
+  
+  echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado - $path"
+  
+  return 0
+}
+
+# Processa os arquivos de um pacote .dev
 processFiles() {
   fileList="$1"
   package_id="$2"
   packageName="$3"
 
+  LibDirs=$(ldconfig -p | tail -n +2 | grep -o '/.*/' | sort -u)
+
+  echo "" > "isLib.txt"
+  echo "" > "isNotElf.txt"
+  echo "" > "isElfD.txt"
+  echo "" > "isElfS.txt"
+  echo "Entrou"
   for f in $fileList; do
     # Remove os dois primeiros caracteres do caminho e ajusta para o diretório temporário
-    f="$DIR_TEMP/${f:2}"
-    
-    # Verifica se o arquivo não é um link simbólico
-    if [[ -L "$f" ]]; then
+    file="/${f:2}"
+    fileWithDirTemp="$DIR_TEMP/${f:2}"
+    #echo "PATH-FULL: $f"
+
+    # Verifica se o arquivo não é um link simbólico ou um diretorio
+    if [[ -L "$fileWithDirTemp" || -d "$fileWithDirTemp" ]]; then
       continue
     fi
 
-    # Determina se o arquivo é um arquivo regular e executável ou uma biblioteca compartilhada
-    #if [[ -f "$f" && (-x "$f" || "$f" == *.so || "$f" == *.so.*) ]]; then
-    
-    filedesc=$(file "$f")
-    LibDirs=$(ldconfig -p | tail -n +2 | grep -o '/.*/' | sort -u)
+    filedesc=$(file -b "$fileWithDirTemp")    
 
-    # Verifica se é biblioteca
-    if [[ -f "$f" && ( "$f" == *.so || "$f" == *.so.* ) && echo "$filedesc" | grep -qi 'ELF.*dynamically' ]]; then
-      for dir in $LibDirs; do
-        if [[ "$f" == "$dir"* ]]; then
-          # Conta como biblioteca
-          # processa IPCs
-          continue 2
+    if [[ -f $fileWithDirTemp ]]; then
+      if checkLibraryPath "$file" && [[ "$file" == *.so || "$file" == *.so.* ]]; then
+        if echo "$filedesc" | grep -qi 'ELF.*dynamically'; then
+          # PROCESSA IPC (BIBLIOTECA)
+          echo "$packageName) $file: $filedesc" >> "isLib.txt"
+        else
+          createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"          
         fi
-      done
-
-    # Verifica se é executável em diretório de executáveis
-    elif [[ -f "$f" && ( "$f" == /bin/* || "$f" == /sbin/* || "$f" == /usr/bin/* || "$f" == /usr/sbin/* ) ]]; then
-      if echo "$filedesc" | grep -qi 'ELF.*dynamically'; then
-        # Conta como executável
-        # processa IPCs
+      elif checkLibraryPath "$file" || checkExePath "$file"; then
+        if echo "$filedesc" | grep -qi 'ELF.*dynamically'; then
+          # PROCESSA IPC (EXE)
+          echo "$packageName) $file: $filedesc" >> "isElfD.txt"
+        else 
+          createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"
+        fi
       else 
-        # Contabiliza tipo de arquivo
+        createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"
       fi
     fi
   done
@@ -260,8 +339,8 @@ downloadPackage() {
 
   # Tenta baixar cada arquivo
   for fn in $filesName; do
-    #url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
-    url="http://ftp.br.debian.org/debian/$fn"
+    url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
+    #url="http://ftp.br.debian.org/debian/$fn"
     
     # Verifica se o pacote já existe na pasta DIR_PACKAGES
     if [ -f "$DIR_FULL/$DIR_PACKAGES/$(basename "$fn")" ]; then
@@ -344,7 +423,7 @@ downloadPackage() {
     logError "Erro ao obter package_id - $packageName $deb"
   fi  
 
-  rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP
+  #rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP
 
   return 0
 }
