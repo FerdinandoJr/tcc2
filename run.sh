@@ -77,7 +77,6 @@ filterIPCs() {
   packageId="$3"
   tipo="$4"
   
-
   # Reseta o dicionario
   resetDict
 
@@ -126,6 +125,7 @@ checkExePath() {
   
   return 1
 }
+
 # Função para verificar se o caminho está na lista de diretórios de biblioteca
 checkLibraryPath() {
   local path="$1"
@@ -161,7 +161,7 @@ createRegisterFile() {
     typeId=8    
   else 
     # ARQUIVOS QUE NAO É IMPORTANTE REGISTRAR
-    echo "$package_id) $filePath: $fileType" >> "isNotElf.txt"
+    # echo "$package_id) $filePath: $fileType" >> "isNotElf.txt"
     return 1
   fi
   
@@ -181,13 +181,8 @@ processFiles() {
   package_id="$2"
   packageName="$3"
 
-  LibDirs=$(ldconfig -p | tail -n +2 | grep -o '/.*/' | sort -u)
+  #LibDirs=$(ldconfig -p | tail -n +2 | grep -o '/.*/' | sort -u)
 
-  echo "" > "isLib.txt"
-  echo "" > "isNotElf.txt"
-  echo "" > "isElfD.txt"
-  echo "" > "isElfS.txt"
-  echo "Entrou"
   for f in $fileList; do
     # Remove os dois primeiros caracteres do caminho e ajusta para o diretório temporário
     file="/${f:2}"
@@ -205,14 +200,16 @@ processFiles() {
       if checkLibraryPath "$file" && [[ "$file" == *.so || "$file" == *.so.* ]]; then
         if echo "$filedesc" | grep -qi 'ELF.*dynamically'; then
           # PROCESSA IPC (BIBLIOTECA)
-          echo "$packageName) $file: $filedesc" >> "isLib.txt"
+          output=$(objdump -R "$fileWithDirTemp" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
+          filterIPCs "$fileWithDirTemp" "$output" "$package_id" "2"  
         else
           createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"          
         fi
       elif checkLibraryPath "$file" || checkExePath "$file"; then
         if echo "$filedesc" | grep -qi 'ELF.*dynamically'; then
           # PROCESSA IPC (EXE)
-          echo "$packageName) $file: $filedesc" >> "isElfD.txt"
+          output=$(objdump -R "$fileWithDirTemp" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
+          filterIPCs "$fileWithDirTemp" "$output" "$package_id" "1" 
         else 
           createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"
         fi
@@ -224,92 +221,6 @@ processFiles() {
 
   return 0
 }
-
-
-# processFiles() {
-#   fileList="$1"
-#   package_id="$2"
-#   packageName="$3"
-
-#   #contDiff=0
-
-#   execlist=$(for f in $fileList; do
-#     # Removendo os dois primeiros caracteres do caminho
-#     f="$DIR_TEMP/${f:2}"
-    
-#     if [[ (-f "$f" && -x "$f") || ("$f" == *.so || "$f" == *.so.*) ]]; then
-#       echo "$f"
-#     fi
-
-#   done)
-  
-  
-#   # Processando cada arquivo executável
-#   for f in $execlist; do
-#     # Obtém a descrição completa do arquivo
-#     filedesc=$(file "$f")
-
-#     if echo "$filedesc" | grep -qi "ELF"; then
-#       # Para arquivos ELF, executa o objdump e processa adicionalmente
-#       output=$(objdump -R "$f" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
-#       # Verifica se objdump foi bem-sucedido
-
-#       tipo=1
-#       if echo "$filedesc" | grep -qi "shared object"; then
-#         tipo=2
-#       fi
-
-#       if [ $? -eq 0 ]; then
-#         #((contDiff++))
-#         # Executa a função filterIPCs somente se objdump não deu erro
-#         filterIPCs "$f" "$output" "$package_id" "$tipo"  
-#       else
-#         logError "objdump encontrou um erro processando o arquivo $f do pacote $package_name ($package_id)"
-#       fi
-#     else
-#       tipo=9
-#       if echo "$filedesc" | grep -qi "symbolic link"; then
-#         tipo=3
-#       elif echo "$filedesc" | grep -qi ".awk"; then
-#         tipo=4
-#       elif echo "$filedesc" | grep -qi "awk script"; then
-#         tipo=4
-#       elif echo "$filedesc" | grep -qi "perl script"; then
-#         tipo=5
-#       elif echo "$filedesc" | grep -qi "bourne-again shell script"; then
-#         tipo=6
-#       elif echo "$filedesc" | grep -qi "posix shell script"; then
-#         tipo=7
-#       elif echo "$filedesc" | grep -qi "python script"; then
-#         tipo=8
-#       else
-#         tipo=9
-#       fi
-
-#       path="${f#dirTemp/}"
-
-#       insert_query="INSERT INTO executable_files VALUES (null, $package_id, $tipo, '$path', false ,false ,false ,false ,false ,false ,false ,false ,false ,false ,false,false ,false ,false ,false ,false ,false , false);"
-
-#       #echo $insert_query
-
-#       sqlite3 $DATABASE "$insert_query"
-
-#       # echo "[$(date -u '+%Y-%m-%d %H:%M:%S' -d '-3 hour')] Finalizado - $path"
-#     fi
-#   done
-
-
-#   # contFiles=$(find ./dirTemp/ -type f -exec file {} \; | grep ELF | cut -d ':' -f 1 | wc -l)
-#   # if [ $contDiff -ne $contFiles ]; then
-#   #   echo "$packageName: $contFiles != $contDiff" >> "diff.txt"
-#   # # else
-#   # #   echo "$packageName: $contFiles == $contDiff" >> "diff.txt"
-#   # fi
-  
-
-
-#   return 0
-# }
 
 # Faz download do pacote e desempacota
 downloadPackage() {
@@ -339,8 +250,8 @@ downloadPackage() {
 
   # Tenta baixar cada arquivo
   for fn in $filesName; do
-    url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
-    #url="http://ftp.br.debian.org/debian/$fn"
+    #url="http://ubuntu.c3sl.ufpr.br/ubuntu/$fn"
+    url="http://ftp.br.debian.org/debian/$fn"
     
     # Verifica se o pacote já existe na pasta DIR_PACKAGES
     if [ -f "$DIR_FULL/$DIR_PACKAGES/$(basename "$fn")" ]; then
@@ -423,7 +334,7 @@ downloadPackage() {
     logError "Erro ao obter package_id - $packageName $deb"
   fi  
 
-  #rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP
+  rm -rf "$DIR_TEMP" # Remove a pasta DIR_TEMP
 
   return 0
 }
@@ -450,8 +361,6 @@ start() {
     echo "Erro: O argumento fornecido ('$inicio') não é um número válido."
     exit 3
   fi
-
-
 
   # e read dentro de um loop while para ler cada linha
   #tail -n +$inicio "$nome_do_arquivo" | while IFS= read -r linha; do
@@ -481,9 +390,9 @@ start() {
     ((contador++))
     
     # Sai do loop após ler X linhas
-    if [ $contador -eq 1 ]; then
-      break
-    fi
+    # if [ $contador -eq 2000 ]; then
+    #   break
+    # fi
   done
 }
 
