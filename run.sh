@@ -202,19 +202,19 @@ processFiles() {
           # PROCESSA IPC (BIBLIOTECA)
           output=$(objdump -R "$fileWithDirTemp" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
           filterIPCs "$fileWithDirTemp" "$output" "$package_id" "2"  
-        else
+        elif [ -x "$fileWithDirTemp" ]; then
           createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"          
         fi
-      elif checkLibraryPath "$file" || checkExePath "$file"; then
-        if echo "$filedesc" | grep -qi 'ELF.*dynamically'; then
-          # PROCESSA IPC (EXE)
-          output=$(objdump -R "$fileWithDirTemp" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
-          filterIPCs "$fileWithDirTemp" "$output" "$package_id" "1" 
-        else 
-          createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"
-        fi
-      else 
-        createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"
+      elif checkLibraryPath "$file" || checkExePath "$file"; then   
+        if [ -x "$fileWithDirTemp" ]; then
+          if echo "$filedesc" | grep -qi 'ELF.*dynamically'; then
+            # PROCESSA IPC (EXE)
+            output=$(objdump -R "$fileWithDirTemp" | grep -e "_JUMP_SLOT" -e "_GLOB_DAT" | awk '{print $3}' | cut -d'@' -f1)
+            filterIPCs "$fileWithDirTemp" "$output" "$package_id" "1" 
+          else 
+            createRegisterFile "$package_id" "$filedesc" "$fileWithDirTemp"
+          fi
+        fi 
       fi
     fi
   done
