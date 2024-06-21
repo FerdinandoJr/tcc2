@@ -176,10 +176,10 @@ def createData():
 		MAX(ef.condition_variables) AS condition_variables,
 		MAX(ef.barriers) AS barriers,
 		MAX(ef.read_write_locks) AS read_write_locks
-	FROM deb_package dp
-    WHERE ef.file_type_id in (1, 2)
+	FROM deb_package dp    
 	JOIN executable_files ef ON ef.package_id = dp.id
-	GROUP BY dp.id, dp.name;
+	WHERE ef.file_type_id in (1, 2)
+	GROUP BY dp.id, dp.name
 
 	"""
 
