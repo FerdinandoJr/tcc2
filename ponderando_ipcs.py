@@ -177,6 +177,7 @@ def createData():
 		MAX(ef.barriers) AS barriers,
 		MAX(ef.read_write_locks) AS read_write_locks
 	FROM deb_package dp
+    WHERE ef.file_type_id in (1, 2)
 	JOIN executable_files ef ON ef.package_id = dp.id
 	GROUP BY dp.id, dp.name;
 
