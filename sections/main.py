@@ -101,7 +101,7 @@ def save_ipc_stats_for_section(section_name, section_id):
         WHERE
             section_id = {section_id}
     ) AS ipc_counts
-    WHERE ipc_type is not null
+    -- WHERE ipc_type is not null
     GROUP BY
         ipc_type
     ORDER BY

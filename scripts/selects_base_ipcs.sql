@@ -13,38 +13,37 @@ GROUP BY
 ORDER BY 
     package_count DESC    
 
--- SELECT PARA PEGAR TOTAL GERAL DE IPCS PELAS SECTIONS
+-- SELECT PARA PEGAR QUANTIDADE DE PACOTES QUE TENHA OCORRENCIA DE 1 IPC
 SELECT 
     s.section_name,
-    SUM(CASE WHEN p.pipe THEN 1 ELSE 0 END +
-     CASE WHEN p.fifo THEN 1 ELSE 0 END +
-     CASE WHEN p.socket THEN 1 ELSE 0 END +
-     CASE WHEN p.pseudo_terminal THEN 1 ELSE 0 END +
-     CASE WHEN p.sysv_message_queues THEN 1 ELSE 0 END +
-     CASE WHEN p.posix_message_queues THEN 1 ELSE 0 END +
-     CASE WHEN p.cross_memory_attach THEN 1 ELSE 0 END +
-     CASE WHEN p.sysv_shared_memory THEN 1 ELSE 0 END +
-     CASE WHEN p.posix_shared_memory THEN 1 ELSE 0 END +
-     CASE WHEN p.mmap THEN 1 ELSE 0 END +
-     CASE WHEN p.sysv_semaphores THEN 1 ELSE 0 END +
-     CASE WHEN p.posix_semaphores THEN 1 ELSE 0 END +
-     CASE WHEN p.eventfd THEN 1 ELSE 0 END +
-     CASE WHEN p.file_and_record_locks THEN 1 ELSE 0 END +
-     CASE WHEN p.mutexes THEN 1 ELSE 0 END +
-     CASE WHEN p.condition_variables THEN 1 ELSE 0 END +
-     CASE WHEN p.barriers THEN 1 ELSE 0 END +
-     CASE WHEN p.read_write_locks THEN 1 ELSE 0 END) AS ipc_count
+    COUNT(p.id) AS package_count,
+    (COUNT(p.id) * 100.0 / (SELECT COUNT(pid.id) FROM package_ipc_data pid WHERE 
+        pid.pipe OR pid.fifo OR pid.socket OR pid.pseudo_terminal OR 
+        pid.sysv_message_queues OR pid.posix_message_queues OR 
+        pid.cross_memory_attach OR pid.sysv_shared_memory OR 
+        pid.posix_shared_memory OR pid.mmap OR pid.sysv_semaphores OR 
+        pid.posix_semaphores OR pid.eventfd OR pid.file_and_record_locks OR 
+        pid.mutexes OR pid.condition_variables OR pid.barriers OR 
+        pid.read_write_locks)) AS percentage
 FROM 
     package_sections s
-JOIN 
+LEFT JOIN 
     package_ipc_data p ON s.id = p.section_id
+WHERE 
+    p.pipe OR p.fifo OR p.socket OR p.pseudo_terminal OR 
+    p.sysv_message_queues OR p.posix_message_queues OR 
+    p.cross_memory_attach OR p.sysv_shared_memory OR 
+    p.posix_shared_memory OR p.mmap OR p.sysv_semaphores OR 
+    p.posix_semaphores OR p.eventfd OR p.file_and_record_locks OR 
+    p.mutexes OR p.condition_variables OR p.barriers OR 
+    p.read_write_locks
 GROUP BY 
-	s.section_name
+    s.id, s.section_name
 ORDER BY 
-    ipc_count DESC;
+    package_count DESC;
 
 
--- SELECT DE PEGAR TOTAL DE CADA IPC PELAS SECTIONS
+-- SELECT DE PEGAR QUANTIDADE TOTAL DE CADA IPC PELAS SECTIONS
 SELECT 
     s.section_name,
     COUNT(CASE WHEN p.pipe THEN 1 ELSE NULL END) AS pipe_count,
