@@ -1,0 +1,10 @@
+None 322 56.00
+mutexes 84 14.61
+pipe 82 14.26
+socket 50 8.70
+mmap 15 2.61
+posix_semaphores 11 1.91
+sysv_shared_memory 3 0.52
+posix_shared_memory 3 0.52
+fifo 3 0.52
+file_and_record_locks 2 0.35

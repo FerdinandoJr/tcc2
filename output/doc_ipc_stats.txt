@@ -1,0 +1,5 @@
+None 10 50.00
+pipe 6 30.00
+mutexes 2 10.00
+socket 1 5.00
+file_and_record_locks 1 5.00

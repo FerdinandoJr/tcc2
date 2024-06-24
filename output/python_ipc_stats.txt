@@ -1,0 +1,11 @@
+None 756 87.10
+mutexes 48 5.53
+pipe 22 2.53
+mmap 22 2.53
+socket 12 1.38
+sysv_message_queues 2 0.23
+posix_shared_memory 2 0.23
+sysv_shared_memory 1 0.12
+posix_semaphores 1 0.12
+file_and_record_locks 1 0.12
+barriers 1 0.12

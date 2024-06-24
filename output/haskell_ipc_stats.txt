@@ -1,0 +1,6 @@
+None 1023 94.03
+pipe 45 4.14
+socket 13 1.19
+mmap 3 0.28
+mutexes 2 0.18
+file_and_record_locks 2 0.18

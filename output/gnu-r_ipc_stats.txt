@@ -1,0 +1,7 @@
+None 529 90.58
+mutexes 20 3.42
+socket 12 2.05
+mmap 12 2.05
+pipe 8 1.37
+sysv_shared_memory 2 0.34
+file_and_record_locks 1 0.17

@@ -1,0 +1,6 @@
+None 54 41.86
+pipe 46 35.66
+mutexes 13 10.08
+socket 10 7.75
+fifo 4 3.10
+mmap 2 1.55

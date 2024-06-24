@@ -1,0 +1,4 @@
+None 9 64.29
+pipe 2 14.29
+mmap 2 14.29
+socket 1 7.14

@@ -1,0 +1,5 @@
+pipe 4 36.36
+socket 3 27.27
+None 2 18.18
+mmap 1 9.09
+file_and_record_locks 1 9.09

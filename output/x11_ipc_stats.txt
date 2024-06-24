@@ -1,0 +1,11 @@
+None 523 69.92
+pipe 109 14.57
+socket 61 8.16
+mmap 14 1.87
+posix_shared_memory 13 1.74
+file_and_record_locks 11 1.47
+pseudo_terminal 5 0.67
+mutexes 5 0.67
+sysv_shared_memory 4 0.53
+fifo 2 0.27
+eventfd 1 0.13

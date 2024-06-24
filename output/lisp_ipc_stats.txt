@@ -1,0 +1,5 @@
+None 25 54.35
+pipe 15 32.61
+socket 2 4.35
+mutexes 2 4.35
+mmap 2 4.35

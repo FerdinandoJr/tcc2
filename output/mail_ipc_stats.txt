@@ -1,0 +1,7 @@
+None 114 50.22
+pipe 63 27.75
+socket 39 17.18
+file_and_record_locks 4 1.76
+mutexes 3 1.32
+mmap 3 1.32
+sysv_semaphores 1 0.44

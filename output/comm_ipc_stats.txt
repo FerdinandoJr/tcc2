@@ -1,0 +1,9 @@
+None 32 37.65
+pipe 24 28.24
+socket 14 16.47
+mmap 5 5.88
+mutexes 4 4.71
+file_and_record_locks 3 3.53
+sysv_shared_memory 1 1.18
+pseudo_terminal 1 1.18
+posix_shared_memory 1 1.18

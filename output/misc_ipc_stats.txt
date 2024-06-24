@@ -1,0 +1,13 @@
+None 236 60.67
+pipe 57 14.65
+socket 41 10.54
+mutexes 28 7.20
+mmap 13 3.34
+sysv_message_queues 3 0.77
+sysv_shared_memory 2 0.51
+pseudo_terminal 2 0.51
+posix_semaphores 2 0.51
+fifo 2 0.51
+sysv_semaphores 1 0.26
+posix_shared_memory 1 0.26
+eventfd 1 0.26

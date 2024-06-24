@@ -1,0 +1,4 @@
+None 20 60.61
+mutexes 6 18.18
+socket 4 12.12
+pipe 3 9.09

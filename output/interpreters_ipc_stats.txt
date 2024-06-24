@@ -1,0 +1,6 @@
+None 132 72.13
+pipe 20 10.93
+mutexes 11 6.01
+socket 10 5.46
+mmap 8 4.37
+pseudo_terminal 2 1.09

@@ -1,0 +1,10 @@
+pipe 474 38.95
+None 453 37.22
+mmap 190 15.61
+mutexes 50 4.11
+socket 33 2.71
+pseudo_terminal 6 0.49
+posix_shared_memory 5 0.41
+fifo 3 0.25
+posix_semaphores 2 0.16
+cross_memory_attach 1 0.08

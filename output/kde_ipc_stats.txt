@@ -1,0 +1,6 @@
+None 190 89.20
+pipe 12 5.63
+socket 5 2.35
+mutexes 4 1.88
+sysv_shared_memory 1 0.47
+mmap 1 0.47

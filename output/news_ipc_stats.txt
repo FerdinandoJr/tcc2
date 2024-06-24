@@ -1,0 +1,6 @@
+pipe 7 38.89
+socket 5 27.78
+fifo 2 11.11
+None 2 11.11
+mmap 1 5.56
+file_and_record_locks 1 5.56

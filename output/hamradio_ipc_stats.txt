@@ -1,0 +1,10 @@
+None 35 32.41
+socket 27 25.00
+pipe 19 17.59
+mutexes 18 16.67
+mmap 3 2.78
+sysv_message_queues 2 1.85
+sysv_shared_memory 1 0.93
+pseudo_terminal 1 0.93
+file_and_record_locks 1 0.93
+fifo 1 0.93

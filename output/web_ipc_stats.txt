@@ -1,0 +1,8 @@
+None 68 39.77
+socket 41 23.98
+pipe 37 21.64
+mmap 12 7.02
+mutexes 9 5.26
+posix_semaphores 2 1.17
+sysv_shared_memory 1 0.58
+fifo 1 0.58

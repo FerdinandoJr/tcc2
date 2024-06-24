@@ -1,0 +1,7 @@
+None 139 69.50
+pipe 25 12.50
+socket 12 6.00
+mmap 11 5.50
+mutexes 10 5.00
+fifo 2 1.00
+cross_memory_attach 1 0.50

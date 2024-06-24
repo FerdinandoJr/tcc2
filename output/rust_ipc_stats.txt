@@ -1,0 +1,3 @@
+pipe 7 70.00
+mmap 2 20.00
+mutexes 1 10.00
