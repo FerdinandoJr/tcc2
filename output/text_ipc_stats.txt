@@ -1,6 +1,10 @@
-None 172 75.44
-pipe 25 10.96
-mmap 12 5.26
-socket 9 3.95
-mutexes 9 3.95
-sysv_shared_memory 1 0.44
+None  172  75.44
+pipe  25  10.96
+mmap  19  8.33
+mutexes  15  6.58
+socket  13  5.70
+condition_variables  9  3.95
+fifo  4  1.75
+eventfd  2  0.88
+sysv_shared_memory  1  0.44
+file_and_record_locks  1  0.44

@@ -1,5 +1,10 @@
-None 150 88.76
-pipe 6 3.55
-mutexes 5 2.96
-socket 4 2.37
-mmap 4 2.37
+None  150  88.76
+socket  7  4.14
+mutexes  7  4.14
+pipe  6  3.55
+mmap  6  3.55
+eventfd  3  1.78
+file_and_record_locks  2  1.18
+condition_variables  2  1.18
+fifo  1  0.59
+sysv_message_queues  1  0.59

@@ -1,5 +1,10 @@
-None 10 50.00
-pipe 6 30.00
-mutexes 2 10.00
-socket 1 5.00
-file_and_record_locks 1 5.00
+None  10  50.00
+mutexes  7  35.00
+pipe  6  30.00
+mmap  4  20.00
+socket  3  15.00
+fifo  2  10.00
+condition_variables  2  10.00
+eventfd  1  5.00
+file_and_record_locks  1  5.00
+read_write_locks  1  5.00

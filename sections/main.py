@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import shutil
 
 # Mapeamento de seções e seus IDs
 sections = {
@@ -60,70 +61,150 @@ sections = {
     'metapackages': 55
 }
 
+
 # Conectar ao banco de dados SQLite
 conn = sqlite3.connect('base_ipcs.db3')
 
 # Criar pasta de saída se não existir
 output_dir = 'output'
+shutil.rmtree('output')
+
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 # Função para executar a consulta e salvar os resultados em um arquivo TXT
-def save_ipc_stats_for_section(section_name, section_id):
+def save_ipc_stats_for_section(section_name, section_id):    
     query = f"""
-    SELECT
-        ipc_type,
-        COUNT(*) AS count
-    FROM (
         SELECT
             CASE
-                WHEN pipe THEN 'pipe'
-                WHEN fifo THEN 'fifo'
-                WHEN socket THEN 'socket'
-                WHEN pseudo_terminal THEN 'pseudo_terminal'
-                WHEN sysv_message_queues THEN 'sysv_message_queues'
-                WHEN posix_message_queues THEN 'posix_message_queues'
-                WHEN cross_memory_attach THEN 'cross_memory_attach'
-                WHEN sysv_shared_memory THEN 'sysv_shared_memory'
-                WHEN posix_shared_memory THEN 'posix_shared_memory'
-                WHEN mmap THEN 'mmap'
-                WHEN sysv_semaphores THEN 'sysv_semaphores'
-                WHEN posix_semaphores THEN 'posix_semaphores'
-                WHEN eventfd THEN 'eventfd'
-                WHEN file_and_record_locks THEN 'file_and_record_locks'
-                WHEN mutexes THEN 'mutexes'
-                WHEN condition_variables THEN 'condition_variables'
-                WHEN barriers THEN 'barriers'
-                WHEN read_write_locks THEN 'read_write_locks'
-            END AS ipc_type
+                WHEN pipe THEN 'pipe, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN fifo THEN 'fifo, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN socket THEN 'socket, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN pseudo_terminal THEN 'pseudo_terminal, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN sysv_message_queues THEN 'sysv_message_queues, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN posix_message_queues THEN 'posix_message_queues, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN cross_memory_attach THEN 'cross_memory_attach, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN sysv_shared_memory THEN 'sysv_shared_memory, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN posix_shared_memory THEN 'posix_shared_memory, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN mutexes THEN 'mutexes, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN mmap THEN 'mmap, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN sysv_semaphores THEN 'sysv_semaphores, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN posix_semaphores THEN 'posix_semaphores, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN eventfd THEN 'eventfd, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN file_and_record_locks THEN 'file_and_record_locks, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN condition_variables THEN 'condition_variables, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN barriers THEN 'barriers, '
+                ELSE ''
+            END ||
+            CASE
+                WHEN read_write_locks THEN 'read_write_locks, '
+                ELSE ''
+            END AS ipc_types
         FROM
             package_ipc_data
         WHERE
-            section_id = {section_id}
-    ) AS ipc_counts
-    -- WHERE ipc_type is not null
-    GROUP BY
-        ipc_type
-    ORDER BY
-        count DESC;
+    section_id = {section_id};
+
     """
 
     cursor = conn.cursor()
     cursor.execute(query)
-    results = cursor.fetchall()
-    cursor.close()
 
-    # Calcular a soma total das contagens
-    total_count = sum(row[1] for row in results)
+    # Processar os resultados e gerar arquivos
+    
+    ipc_data_count = {
+        'pipe': 0,
+        'fifo': 0,
+        'socket': 0,
+        'pseudo_terminal': 0,
+        'sysv_message_queues': 0,
+        'posix_message_queues': 0,
+        'cross_memory_attach': 0,
+        'sysv_shared_memory': 0,
+        'posix_shared_memory': 0,
+        'mutexes': 0,
+        'mmap': 0,
+        'sysv_semaphores': 0,
+        'posix_semaphores': 0,
+        'eventfd': 0,
+        'file_and_record_locks': 0,
+        'condition_variables': 0,
+        'barriers': 0,
+        'read_write_locks': 0,
+        'None': 0
+    }
 
-    # Salvar os resultados em um arquivo TXT
-    filename = os.path.join(output_dir, f'{section_name}_ipc_stats.txt')
-    with open(filename, 'w') as txtfile:
-        # txtfile.write('ipc_type count percentage\n')
-        for row in results:
-            percentage = (row[1] * 100.0) / total_count
-            txtfile.write(f'{row[0]} {row[1]} {percentage:.2f}\n')
+    total_pacotes = 0
+    for row in cursor.fetchall():
+        ipc_data = row[0] # map
+        total_pacotes += 1
+        ipc_types = ipc_data.split(', ')
+        if ipc_data == "":
+            ipc_data_count['None'] += 1
+        else :
+            for ipc_type in ipc_types:
+                if ipc_type in ipc_data_count:
+                    ipc_data_count[ipc_type] += 1        
+                
+    sorted_ipc_data_count = dict(sorted(ipc_data_count.items(), key=lambda x: x[1], reverse=True))
+    for ipc_type, count in sorted_ipc_data_count.items():
+        # Gerar arquivo para a seção
+        if count > 0 :
+            output_file = os.path.join(output_dir, f"{section_name}_ipc_stats.txt")
+            with open(output_file, 'a') as f:
+                percentage = (count / total_pacotes) * 100 if total_pacotes > 0 else 0
+                f.write(f"{ipc_type}  {count}  {percentage:.2f}\n") 
+            
 
+# save_ipc_stats_for_section('javascript', 54)
 # Executar a função para todas as seções
 for section_name, section_id in sections.items():
     save_ipc_stats_for_section(section_name, section_id)

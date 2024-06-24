@@ -1,7 +1,10 @@
-None 174 80.93
-socket 15 6.98
-pipe 12 5.58
-mutexes 7 3.26
-mmap 4 1.86
-fifo 2 0.93
-pseudo_terminal 1 0.47
+None  174  80.93
+socket  19  8.84
+mutexes  13  6.05
+pipe  12  5.58
+mmap  6  2.79
+fifo  3  1.40
+pseudo_terminal  3  1.40
+condition_variables  2  0.93
+sysv_shared_memory  1  0.47
+posix_shared_memory  1  0.47

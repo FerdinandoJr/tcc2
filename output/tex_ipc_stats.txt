@@ -1,5 +1,8 @@
-None 39 79.59
-pipe 7 14.29
-mutexes 1 2.04
-mmap 1 2.04
-fifo 1 2.04
+None  39  79.59
+pipe  7  14.29
+socket  6  12.24
+mmap  5  10.20
+fifo  4  8.16
+mutexes  2  4.08
+eventfd  1  2.04
+condition_variables  1  2.04

@@ -1,6 +1,6 @@
-None 34 85.00
-socket 2 5.00
-sysv_shared_memory 1 2.50
-pseudo_terminal 1 2.50
-mutexes 1 2.50
-mmap 1 2.50
+None  34  85.00
+socket  2  5.00
+sysv_shared_memory  2  5.00
+pseudo_terminal  1  2.50
+mutexes  1  2.50
+mmap  1  2.50

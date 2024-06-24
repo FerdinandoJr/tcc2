@@ -1,5 +1,5 @@
-None 52 82.54
-socket 5 7.94
-pipe 4 6.35
-mutexes 1 1.59
-mmap 1 1.59
+None  52  82.54
+socket  5  7.94
+pipe  4  6.35
+mutexes  1  1.59
+mmap  1  1.59

@@ -1,2 +1,4 @@
-mmap 2 50.00
-None 2 50.00
+mmap  2  50.00
+None  2  50.00
+mutexes  1  25.00
+condition_variables  1  25.00

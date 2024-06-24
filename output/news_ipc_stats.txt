@@ -1,6 +1,10 @@
-pipe 7 38.89
-socket 5 27.78
-fifo 2 11.11
-None 2 11.11
-mmap 1 5.56
-file_and_record_locks 1 5.56
+socket  13  72.22
+pipe  7  38.89
+mmap  7  38.89
+fifo  2  11.11
+mutexes  2  11.11
+file_and_record_locks  2  11.11
+None  2  11.11
+sysv_shared_memory  1  5.56
+sysv_semaphores  1  5.56
+condition_variables  1  5.56

@@ -1,2 +1,10 @@
-None 10 66.67
-pipe 5 33.33
+None  10  66.67
+pipe  5  33.33
+socket  5  33.33
+mutexes  5  33.33
+posix_shared_memory  4  26.67
+mmap  4  26.67
+posix_semaphores  4  26.67
+condition_variables  3  20.00
+file_and_record_locks  1  6.67
+read_write_locks  1  6.67

@@ -1,3 +1,11 @@
-pipe 12 85.71
-socket 1 7.14
-mmap 1 7.14
+pipe  12  85.71
+socket  6  42.86
+mmap  6  42.86
+mutexes  3  21.43
+pseudo_terminal  2  14.29
+file_and_record_locks  2  14.29
+fifo  1  7.14
+sysv_semaphores  1  7.14
+posix_semaphores  1  7.14
+eventfd  1  7.14
+condition_variables  1  7.14

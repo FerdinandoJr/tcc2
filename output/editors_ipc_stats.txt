@@ -1,6 +1,11 @@
-None 54 41.86
-pipe 46 35.66
-mutexes 13 10.08
-socket 10 7.75
-fifo 4 3.10
-mmap 2 1.55
+None  54  41.86
+pipe  46  35.66
+socket  28  21.71
+mutexes  22  17.05
+mmap  17  13.18
+pseudo_terminal  12  9.30
+file_and_record_locks  10  7.75
+fifo  8  6.20
+condition_variables  4  3.10
+read_write_locks  3  2.33
+posix_semaphores  1  0.78

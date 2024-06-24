@@ -1,4 +1,9 @@
-None 9 64.29
-pipe 2 14.29
-mmap 2 14.29
-socket 1 7.14
+None  9  64.29
+mmap  3  21.43
+pipe  2  14.29
+socket  2  14.29
+fifo  1  7.14
+mutexes  1  7.14
+posix_semaphores  1  7.14
+file_and_record_locks  1  7.14
+condition_variables  1  7.14

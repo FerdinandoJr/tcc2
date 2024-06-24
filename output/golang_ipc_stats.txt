@@ -1,1 +1,3 @@
-mmap 60 100.00
+mutexes  60  100.00
+mmap  60  100.00
+condition_variables  60  100.00

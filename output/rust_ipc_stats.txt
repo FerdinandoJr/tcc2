@@ -1,3 +1,5 @@
-pipe 7 70.00
-mmap 2 20.00
-mutexes 1 10.00
+mmap  9  90.00
+pipe  7  70.00
+socket  3  30.00
+file_and_record_locks  3  30.00
+mutexes  1  10.00
